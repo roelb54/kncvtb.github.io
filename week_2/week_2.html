@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Roel Bakker, PhD" />
+
+
+<title>Modelling infectious disease dynamics with R [extras A]</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Modelling infectious disease dynamics with
+R [extras A]</h1>
+<h4 class="author">Roel Bakker, PhD</h4>
+<h4 class="date">April 2024</h4>
+
+
+
+<hr />
+<div id="agenda" class="section level2">
+<h2>Agenda</h2>
+<ol style="list-style-type: decimal">
+<li>Base R cheat sheet at: <a href="http://github.com/rstudio/cheatsheets/blob/main/base-r.pdf" class="uri">http://github.com/rstudio/cheatsheets/blob/main/base-r.pdf</a></li>
+<li>More R cheat sheets at RStudio: <a href="https://www.rstudio.com/resources/cheatsheets/" class="uri">https://www.rstudio.com/resources/cheatsheets/</a></li>
+<li>More on R and statistics at: <a href="https://bit.ly/statR" class="uri">https://bit.ly/statR</a> including link to R course at
+DataCamp</li>
+<li>Review of Differential Equations [10 min]</li>
+<li>Lab 1: Simulation of the Lorenz equations with deSolve [20 min]</li>
+<li>Lab 2 (and homework): Implementation of model 1 from <a href="https://bmcinfectdis.biomedcentral.com/articles/10.1186/s12879-020-05592-5">Sumner
+and White</a></li>
+</ol>
+</div>
+<div id="review-of-differential-equations" class="section level2">
+<h2>Review of Differential Equations</h2>
+<p>Definition of a differential equation:</p>
+<p><strong>an equation that defines the relationship between a function
+and its derivatives</strong></p>
+<p>For example:</p>
+<p><span class="math inline">\(dy(t)/dt = k \cdot y(t)\)</span></p>
+<p>with <span class="math inline">\(y(t)\)</span> a function of
+time.</p>
+<p>We are looking for a function <span class="math inline">\(y(t)\)</span> that <em>satisfies</em> the
+differential equation i.e.<br />
+the condition that at any moment in time <span class="math inline">\(dy(t)/dt\)</span> equals a constant <span class="math inline">\(k\)</span> times<br />
+the value of <span class="math inline">\(y(t)\)</span> at that
+moment.</p>
+<p>Let’s use <a href="https://www.wolframalpha.com/">WolframAlpha</a> to
+solve the differential equation.</p>
+<p>Enter <span class="math inline">\(y&#39;[t] = k \space y[t]\)</span>
+in the text box and click on <span class="math inline">\(=\)</span></p>
+<p>For k = -1 enter <span class="math inline">\(y&#39;[t] =
+-y[t]\)</span></p>
+<p>A particular solution for y(0) = 3: <span class="math inline">\(y&#39;[t] = -y[t], y[0]=3\)</span></p>
+<hr />
+</div>
+<div id="lab-1-simulation-of-the-lorenz-equations-with-desolve" class="section level2">
+<h2>Lab 1: Simulation of the Lorenz equations with deSolve</h2>
+<p>Many differential equations cannot be solved analytically.<br />
+In that case we can <em>simulate</em> the time behavior of the
+differential equations.<br />
+We will use the R package deSolve to do that.</p>
+<p>Lab 1(i.e. DIY): - implement the Lorenz model as documented in the
+deSolve vignette:<br />
+<em>Solving Initial Value Differential Equations in R</em></p>
+<ul>
+<li>please read the deSolve documentation on the ode() function<br />
+</li>
+<li>you may also want to read documentation on with (i.e. ? with in
+RStudio)</li>
+</ul>
+<p>Note that the function Lorenz is defined as:</p>
+<p><span class="math inline">\(Lorenz = function(t, state,
+parameters)\)</span></p>
+<p>although <span class="math inline">\(t\)</span> is not being used in
+the function body (as in the SIR model).</p>
+<p>It may seem a bit mysterious that <span class="math inline">\(t\)</span> would not be necessary to calculate
+the<br />
+time derivatives, but this simply means that<br />
+- the explicit value of <span class="math inline">\(t\)</span> does not
+matter ; we could start anywhere in time …<br />
+- the initial values of the state variables (i.e. <span class="math inline">\(X(0)\)</span>,<span class="math inline">\(Y(0)\)</span>,<span class="math inline">\(Z(0)\)</span>) determine the starting values</p>
+<p>Differential equations without <span class="math inline">\(t\)</span>
+occurring on the RHS of the equations are called<br />
+<em>autonomous differential equations</em>.</p>
+<p>The derivative <span class="math inline">\(dY/dt\)</span> means the
+change in Y per unit time<br />
+the <span class="math inline">\(\frac{1}{unit\ time}\)</span> results
+from the rate parameters on the RHS of the equations.</p>
+<p>See also <a href="https://roelb54.shinyapps.io/devdataproduct">Lorenz
+demo</a></p>
+</div>
+<div id="lab-2-and-homework-not-for-the-faint-of-heart--" class="section level2">
+<h2>Lab 2 and homework [not for the faint of heart :-)]:</h2>
+<p>Read the paper by Tom Sumner and Richard White in BMC Infectious
+Diseases: <a href="https://bmcinfectdis.biomedcentral.com/articles/10.1186/s12879-020-05592-5" class="uri">https://bmcinfectdis.biomedcentral.com/articles/10.1186/s12879-020-05592-5</a></p>
+<p>including the appendix: <a href="https://static-content.springer.com/esm/art%3A10.1186%2Fs12879-020-05592-5/MediaObjects/12879_2020_5592_MOESM1_ESM.docx" class="uri">https://static-content.springer.com/esm/art%3A10.1186%2Fs12879-020-05592-5/MediaObjects/12879_2020_5592_MOESM1_ESM.docx</a></p>
+<p>Implement model 1 in deSolve</p>
+<p>Research questions:</p>
+<ul>
+<li>what is the predicted dynamics (i.e. in what time frame would we see
+an impact) of the impact of TPT on TB disease incidence?<br />
+</li>
+<li>what is the predicted dynamics of ACF on TB disease incidence?<br />
+</li>
+<li>which intervention would be cheaper (e.g. costs per incident case
+averted)?</li>
+</ul>
+<p>See also <a href="https://roelb54.shinyapps.io/TBvaxdemo/" class="uri">https://roelb54.shinyapps.io/TBvaxdemo/</a></p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
